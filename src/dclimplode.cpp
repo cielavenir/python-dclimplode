@@ -53,9 +53,9 @@ public:
             requireInput = true;
             for(;!hasInput;)usleep(1000);
             requireInput = false;
-            hasInput = false;
             offset = 0;
         }
+        hasInput = false;
         unsigned int copysize = offset+size > instr.size() ? instr.size()-offset : size;
         memcpy(buf,instr.data()+offset,copysize);
         offset+=copysize;
