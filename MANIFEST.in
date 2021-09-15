@@ -1,0 +1,6 @@
+include pyproject.toml
+include monkeypatch_distutils.py
+include cmake/*
+include src/*
+include src/libslz/src/slz.*
+include src/libslz/src/tables.h
