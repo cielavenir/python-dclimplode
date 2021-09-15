@@ -6,14 +6,19 @@ import monkeypatch_distutils
 
 from setuptools import setup
 try:
-	from pybind11.setup_helpers import Pybind11Extension
+    from pybind11.setup_helpers import Pybind11Extension
 except ImportError:
-	from setuptools import Extension as Pybind11Extension
+    from setuptools import Extension as Pybind11Extension
 
 ext_modules = [
     Pybind11Extension(
         "dclimplode",
-        ['src/dclimplode.cpp', 'src/blast.c'],  # Sort source files for reproducibility
+        [
+            'src/dclimplode.cpp',
+            'src/blast.c',
+            'src/explode.c',
+            'src/implode.c',
+        ],
     ),
 ]
 
