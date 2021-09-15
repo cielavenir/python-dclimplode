@@ -2,14 +2,13 @@
 
 ## dclimplode
 
-to be updated
-
-a (quick) binding for http://www.libslz.org/
+a (quick) binding for https://github.com/madler/zlib/blob/master/contrib/blast/blast.c and https://github.com/ladislav-zezula/StormLib/blob/master/src/pklib/implode.c
 
 ```
-o = slz.compressobj
-o.compress('hello')
-o.flush()
+o = dclimplode.compressobj()
+s = o.compress(b'hello')+o.flush()
+o = dclimplode.decompressobj()
+o.decompress(s) == b'hello'
 ```
 
 the stream is compatible with zlib deflate.

@@ -24,7 +24,7 @@ ext_modules = [
 
 setup(
     name='dclimplode',
-    description='dclimplode',
+    description='a binding for blast/pklib (dclimplode)',
     long_description=open("README.md").read(),
     version='0.0.0.1',
     url='https://github.com/cielavenir/python-dclimplode',
@@ -42,7 +42,7 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Python Software Foundation License',
         'Operating System :: POSIX',
-        'Operating System :: Microsoft :: Windows',
+        # 'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
         'Topic :: Software Development :: Libraries',
         'Topic :: Utilities',
