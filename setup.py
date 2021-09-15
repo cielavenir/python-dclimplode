@@ -15,9 +15,9 @@ ext_modules = [
         "dclimplode",
         [
             'src/dclimplode.cpp',
-            'src/blast.c',
-            'src/explode.c',
-            'src/implode.c',
+            'src/blast/blast.c',
+            'src/pklib/explode.c',
+            'src/pklib/implode.c',
         ],
     ),
 ]
@@ -27,7 +27,7 @@ setup(
     description='dclimplode',
     long_description=open("README.md").read(),
     version='0.0.0.1',
-    url='https://github.com/cielavenir/python-slz',
+    url='https://github.com/cielavenir/python-dclimplode',
     license='PSF',
     author='cielavenir',
     author_email='cielartisan@gmail.com',

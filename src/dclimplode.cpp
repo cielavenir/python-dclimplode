@@ -2,8 +2,8 @@
 #include <pthread.h>
 
 extern "C" {
-#include "blast.h"
-#include "pklib.h"
+#include "blast/blast.h"
+#include "pklib/pklib.h"
 }
 
 namespace py = pybind11;
