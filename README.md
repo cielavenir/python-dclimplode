@@ -25,5 +25,6 @@ o.decompress(s) == b'hello'
 
 ## special thanks
 
-- https://github.com/JoshVarga/blast
+- https://github.com/JoshVarga/blast showed dclimplode compression by Ladislav Zezula (I knew dclimplode decompression in zlib for a long time though)
+- unlike [deflate64 infback9](https://github.com/brianhelba/zipfile-deflate64/pull/18), making dclimplode blast resumable does not look possible (for me). instead I used threaded decoder. basic idea is from https://github.com/miurahr/pyppmd/pull/33#issuecomment-894676975 ('s linked commit f224a04).
 
