@@ -28,7 +28,7 @@ setup(
     long_description=open("README.md").read(),
     version='0.0.0.2',
     url='https://github.com/cielavenir/python-dclimplode',
-    license='PSF',
+    license='MIT',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
     setup_requires=["pybind11"],
