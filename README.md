@@ -13,8 +13,6 @@ o = dclimplode.decompressobj()
 o.decompress(s) == b'hello'
 ```
 
-the stream is compatible with zlib deflate.
-
 ## tested versions
 
 - Python 2.7
@@ -24,3 +22,8 @@ the stream is compatible with zlib deflate.
     - For PyPy2, pip needs to be 20.1.x cf https://github.com/pypa/pip/issues/8653
     - PyPy needs to be 7.3.1+ cf https://github.com/pybind/pybind11/issues/2436
 - Pyston [3.8] 2.3
+
+## special thanks
+
+- https://github.com/JoshVarga/blast
+
