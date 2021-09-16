@@ -4,6 +4,8 @@
 
 a (quick) binding for https://github.com/madler/zlib/blob/master/contrib/blast/blast.c and https://github.com/ladislav-zezula/StormLib/blob/master/src/pklib/implode.c
 
+DCL stands for `PKWARE(R) Data Compression Library`.
+
 ```
 o = dclimplode.compressobj()
 s = o.compress(b'hello')+o.flush()
