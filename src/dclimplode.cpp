@@ -39,13 +39,13 @@ public:
     {
         if(typ>1)throw std::invalid_argument(format("invalid type, must be 0 or 1 (%d)", typ));
         if(dsize!=1024 && dsize!=2048 && dsize!=4096)throw std::invalid_argument(format("invalid dsize, must be 1024, 2048 or 4096 (%d)", dsize));
+        outstr.reserve(65536);
     }
     ~dclimplode_compressobj(){
         pthread_cancel(thread);
     }
 
     void put(char *buf, unsigned int len){
-        outstr.reserve(outstr.capacity() + len);
         outstr.insert(outstr.end(), buf, buf+len);
     }
     unsigned int get(char *buf, unsigned int size){
@@ -121,13 +121,13 @@ class dclimplode_decompressobj{
 public:
     bool finished;
     dclimplode_decompressobj(): requireInput(false), hasInput(false), first(true), finished(false), result(0), thread(NULL){
+        outstr.reserve(65536);
     }
     ~dclimplode_decompressobj(){
         pthread_cancel(thread);
     }
 
     int put(unsigned char *buf, unsigned int len){
-        outstr.reserve(outstr.capacity() + len);
         outstr.insert(outstr.end(), buf, buf+len);
         return 0;
     }
