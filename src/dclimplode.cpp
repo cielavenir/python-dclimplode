@@ -6,6 +6,8 @@ extern "C" {
 #include "pklib/pklib.h"
 }
 
+const unsigned int SLEEP_US = 10;
+
 namespace py = pybind11;
 using namespace pybind11::literals;
 
@@ -51,7 +53,7 @@ public:
     unsigned int get(char *buf, unsigned int size){
         if(offset == instr.size()){
             requireInput = true;
-            for(;!hasInput;)usleep(1000);
+            for(;!hasInput;)usleep(SLEEP_US);
             requireInput = false;
             offset = 0;
         }
@@ -86,8 +88,8 @@ public:
         }
         if(first)offset=0,pthread_create(&thread,NULL,C_impl,this);
         first=false;
-        for(;hasInput && !finished;)usleep(1000);
-        for(;!requireInput && !finished;)usleep(1000);
+        for(;hasInput && !finished;)usleep(SLEEP_US);
+        for(;!requireInput && !finished;)usleep(SLEEP_US);
         if(finished){
             pthread_join(thread,NULL);
             if(result)throw std::runtime_error(format("implode() error (%d)", result));
@@ -103,8 +105,8 @@ public:
         }
         if(first)offset=0,pthread_create(&thread,NULL,C_impl,this);
         first=false;
-        for(;hasInput && !finished;)usleep(1000);
-        for(;!requireInput && !finished;)usleep(1000);
+        for(;hasInput && !finished;)usleep(SLEEP_US);
+        for(;!requireInput && !finished;)usleep(SLEEP_US);
         if(finished)pthread_join(thread,NULL);
         return py::bytes((char*)outstr.data(), outstr.size());
     }
@@ -133,7 +135,7 @@ public:
     }
     unsigned int get(unsigned char **buf){
         requireInput = true;
-        for(;!hasInput;)usleep(1000);
+        for(;!hasInput;)usleep(SLEEP_US);
         requireInput = false;
         hasInput = false;
         *buf = (unsigned char*)instr.data();
@@ -162,8 +164,8 @@ public:
         }
         if(first)pthread_create(&thread,NULL,C_impl,this);
         first=false;
-        for(;hasInput && !finished;)usleep(1000);
-        for(;!requireInput && !finished;)usleep(1000);
+        for(;hasInput && !finished;)usleep(SLEEP_US);
+        for(;!requireInput && !finished;)usleep(SLEEP_US);
         if(finished){
             pthread_join(thread,NULL);
             if(result)throw std::runtime_error(format("blast() error (%d)", result));
