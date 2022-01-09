@@ -233,13 +233,13 @@ public:
             instr = std::string(buffer, length);
             hasInput = true;
         }
-        if(first)pthread_create(&thread,NULL,C_impl,this);
+        if(first)offset=0,pthread_create(&thread,NULL,C_impl,this);
         first=false;
         for(;hasInput && !finished;)usleep(SLEEP_US);
         for(;!requireInput && !finished;)usleep(SLEEP_US);
         if(finished){
             pthread_join(thread,NULL);
-            if(result)throw std::runtime_error(format("blast() error (%d)", result));
+            if(result)throw std::runtime_error(format("explode() error (%d)", result));
         }
         return py::bytes((char*)outstr.data(), outstr.size());
     }
