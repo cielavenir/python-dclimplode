@@ -112,7 +112,7 @@ public:
     }
 };
 
-class dclimplode_decompressobj{
+class dclimplode_decompressobj_blast{
     std::string instr;
     std::vector<unsigned char>outstr;
     bool requireInput;
@@ -122,10 +122,10 @@ class dclimplode_decompressobj{
     pthread_t thread;
 public:
     bool finished;
-    dclimplode_decompressobj(): requireInput(false), hasInput(false), first(true), finished(false), result(0), thread(NULL){
+    dclimplode_decompressobj_blast(): requireInput(false), hasInput(false), first(true), finished(false), result(0), thread(NULL){
         outstr.reserve(65536);
     }
-    ~dclimplode_decompressobj(){
+    ~dclimplode_decompressobj_blast(){
         pthread_cancel(thread);
     }
 
@@ -142,14 +142,14 @@ public:
         return instr.size();
     }
     static int C_put(void *out_desc, unsigned char *buf, unsigned int len){
-        return ((dclimplode_decompressobj*)out_desc)->put(buf, len);
+        return ((dclimplode_decompressobj_blast*)out_desc)->put(buf, len);
     }
     static unsigned int C_get(void *in_desc, unsigned char **buf){
-        return ((dclimplode_decompressobj*)in_desc)->get(buf);
+        return ((dclimplode_decompressobj_blast*)in_desc)->get(buf);
     }
     static void* C_impl(void *ptr){
-        ((dclimplode_decompressobj*)ptr)->result = blast(C_get, ptr, C_put, ptr, NULL, NULL);
-        ((dclimplode_decompressobj*)ptr)->finished = true;
+        ((dclimplode_decompressobj_blast*)ptr)->result = blast(C_get, ptr, C_put, ptr, NULL, NULL);
+        ((dclimplode_decompressobj_blast*)ptr)->finished = true;
         return NULL;
     }
 
@@ -254,12 +254,12 @@ PYBIND11_MODULE(dclimplode, m){
     .def("flush", &dclimplode_compressobj::flush)
     ;
 
-    py::class_<dclimplode_decompressobj, std::shared_ptr<dclimplode_decompressobj> >(m, "decompressobj_blast")
+    py::class_<dclimplode_decompressobj_blast, std::shared_ptr<dclimplode_decompressobj_blast> >(m, "decompressobj_blast")
     .def(py::init<>())
-    .def("decompress", &dclimplode_decompressobj::decompress,
+    .def("decompress", &dclimplode_decompressobj_blast::decompress,
      "obj"_a
     )
-    .def_readonly("eof", &dclimplode_decompressobj::finished)
+    .def_readonly("eof", &dclimplode_decompressobj_blast::finished)
     ;
 
     py::class_<dclimplode_decompressobj_pklib, std::shared_ptr<dclimplode_decompressobj_pklib> >(m, "decompressobj_pklib")
