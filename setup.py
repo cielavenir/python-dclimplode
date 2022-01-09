@@ -12,7 +12,7 @@ except ImportError:
 
 ext_modules = [
     Pybind11Extension(
-        "dclimplode",
+        "dclimplode.dclimplode",
         [
             'src/dclimplode.cpp',
             'src/blast/blast.c',
@@ -26,12 +26,13 @@ setup(
     name='dclimplode',
     description='a binding for blast/pklib (dclimplode)',
     long_description=open("README.md").read(),
-    version='0.0.0.3',
+    version='0.0.0.4',
     url='https://github.com/cielavenir/python-dclimplode',
     license='MIT',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
     setup_requires=["pybind11"],
+    packages=['dclimplode'],
     ext_modules=ext_modules,
     #cmdclass={"build_ext": build_ext},
     zip_safe=False,

@@ -174,6 +174,77 @@ public:
     }
 };
 
+class dclimplode_decompressobj_pklib{
+    std::string instr;
+    std::vector<unsigned char>outstr;
+    bool requireInput;
+    bool hasInput;
+    bool first;
+    int result;
+    pthread_t thread;
+
+    unsigned int offset;
+    TDcmpStruct DcmpStruct;
+public:
+    bool finished;
+    dclimplode_decompressobj_pklib(): requireInput(false), hasInput(false), first(true), finished(false), result(0), thread(NULL){
+        outstr.reserve(65536);
+    }
+    ~dclimplode_decompressobj_pklib(){
+        pthread_cancel(thread);
+    }
+
+    void put(char *buf, unsigned int len){
+        outstr.insert(outstr.end(), buf, buf+len);
+    }
+    unsigned int get(char *buf, unsigned int size){
+        if(offset == instr.size()){
+            requireInput = true;
+            for(;!hasInput;)usleep(SLEEP_US);
+            requireInput = false;
+            offset = 0;
+        }
+        hasInput = false;
+        unsigned int copysize = offset+size > instr.size() ? instr.size()-offset : size;
+        memcpy(buf,instr.data()+offset,copysize);
+        offset+=copysize;
+        return copysize;
+    }
+    static void C_put(char *buf, unsigned int *size, void *param){
+        ((dclimplode_decompressobj_pklib*)param)->put(buf, *size);
+    }
+    static unsigned int C_get(char *buf, unsigned int *size, void *param){
+        return ((dclimplode_decompressobj_pklib*)param)->get(buf, *size);
+    }
+    static void* C_impl(void *ptr){
+        TDcmpStruct *pDcmpStruct = &((dclimplode_decompressobj_pklib*)ptr)->DcmpStruct;
+        memset(pDcmpStruct, 0, sizeof(TDcmpStruct));
+        ((dclimplode_decompressobj_pklib*)ptr)->result = explode(C_get, C_put, (char*)pDcmpStruct, ptr);
+        ((dclimplode_decompressobj_pklib*)ptr)->finished = true;
+        return NULL;
+    }
+
+    py::bytes decompress(const py::bytes &obj){
+        outstr.resize(0);
+        {
+            char *buffer = nullptr;
+            ssize_t length = 0;
+            PYBIND11_BYTES_AS_STRING_AND_SIZE(obj.ptr(), &buffer, &length);
+            instr = std::string(buffer, length);
+            hasInput = true;
+        }
+        if(first)pthread_create(&thread,NULL,C_impl,this);
+        first=false;
+        for(;hasInput && !finished;)usleep(SLEEP_US);
+        for(;!requireInput && !finished;)usleep(SLEEP_US);
+        if(finished){
+            pthread_join(thread,NULL);
+            if(result)throw std::runtime_error(format("blast() error (%d)", result));
+        }
+        return py::bytes((char*)outstr.data(), outstr.size());
+    }
+};
+
 PYBIND11_MODULE(dclimplode, m){
     py::class_<dclimplode_compressobj, std::shared_ptr<dclimplode_compressobj> >(m, "compressobj")
     .def(py::init<int, int>(), "type"_a=1, "dictsize"_a=4096)
@@ -183,12 +254,20 @@ PYBIND11_MODULE(dclimplode, m){
     .def("flush", &dclimplode_compressobj::flush)
     ;
 
-    py::class_<dclimplode_decompressobj, std::shared_ptr<dclimplode_decompressobj> >(m, "decompressobj")
+    py::class_<dclimplode_decompressobj, std::shared_ptr<dclimplode_decompressobj> >(m, "decompressobj_blast")
     .def(py::init<>())
     .def("decompress", &dclimplode_decompressobj::decompress,
      "obj"_a
     )
     .def_readonly("eof", &dclimplode_decompressobj::finished)
+    ;
+
+    py::class_<dclimplode_decompressobj_pklib, std::shared_ptr<dclimplode_decompressobj_pklib> >(m, "decompressobj_pklib")
+    .def(py::init<>())
+    .def("decompress", &dclimplode_decompressobj_pklib::decompress,
+     "obj"_a
+    )
+    .def_readonly("eof", &dclimplode_decompressobj_pklib::finished)
     ;
 
     m.attr("CMP_BINARY") = int(CMP_BINARY);
