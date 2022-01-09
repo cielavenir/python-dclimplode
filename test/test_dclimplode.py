@@ -4,7 +4,8 @@ import io
 import pytest
 
 @pytest.mark.parametrize('type',[0,1])
-def test_dclimplode(type):
+@pytest.mark.parametrize('decompressobj',[dclimplode.decompressobj_blast,dclimplode.decompressobj_pklib])
+def test_dclimplode(type, decompressobj):
     bytesio = io.BytesIO()
     with open(os.path.join(os.path.dirname(__file__), '10000SalesRecords.csv'), 'rb') as f:
         content = f.read()
@@ -18,5 +19,8 @@ def test_dclimplode(type):
         bytesio.write(dfl.flush())
         # print(len(bytesio.getvalue()))
     bytesio.seek(0)
-    ifl = dclimplode.decompressobj()
-    assert ifl.decompress(bytesio.read()) == content
+    ifl = decompressobj()
+    decompressed_content = ifl.decompress(bytesio.read())
+    if not ifl.eof:
+        decompressed_content += ifl.decompress(b'')
+    assert decompressed_content == content
