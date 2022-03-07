@@ -2,3 +2,5 @@
 
 from .dclimplode import *
 decompressobj = decompressobj_blast
+
+# decompressobj_pklib requires flushing decompressor, hence incompatible with zipfile39.

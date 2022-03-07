@@ -19,12 +19,14 @@ ext_modules = [
             'src/pklib/explode.c',
             'src/pklib/implode.c',
         ],
+        extra_compile_args=['-O2'],
+        extra_link_args=['-s'],
     ),
 ]
 
 setup(
     name='dclimplode',
-    description='a binding for blast/pklib (dclimplode)',
+    description='a (light) binding for blast/pklib (dclimplode)',
     long_description=open("README.md").read(),
     version='0.0.0.4',
     url='https://github.com/cielavenir/python-dclimplode',

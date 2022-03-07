@@ -2,7 +2,7 @@
 
 ## dclimplode
 
-a (quick) binding for https://github.com/madler/zlib/blob/master/contrib/blast/blast.c and https://github.com/ladislav-zezula/StormLib/blob/master/src/pklib/implode.c
+a (light) binding for https://github.com/madler/zlib/blob/master/contrib/blast/blast.c and https://github.com/ladislav-zezula/StormLib/blob/master/src/pklib/implode.c
 
 DCL stands for `PKWARE(R) Data Compression Library`.
 
@@ -27,4 +27,3 @@ o.decompress(s) == b'hello'
 
 - https://github.com/JoshVarga/blast showed dclimplode compression by Ladislav Zezula (I knew dclimplode decompression in zlib for a long time though)
 - unlike [deflate64 infback9](https://github.com/brianhelba/zipfile-deflate64/pull/18), making dclimplode blast resumable does not look possible (for me). instead I used threaded decoder. basic idea is from https://github.com/miurahr/pyppmd/pull/33#issuecomment-894676975 ('s linked commit f224a04).
-
