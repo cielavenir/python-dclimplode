@@ -1,0 +1,42 @@
+name: wheel
+  
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+        python-version: ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10"]
+        exclude:
+          - os: windows-latest
+            python-version: "2.7"
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Checkout submodule
+      run: |
+        git submodule init
+        git submodule update
+    - name: Change submodule tag on Windows
+      if: ${{ matrix.os == 'windows-latest' }}
+      run: |
+        git -C src/p7zip checkout origin/7zip_21.02 
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install tox and pypa-build
+      run: |
+        pip install --upgrade pip
+        pip install tox build
+    - name: Build wheel
+      run: |
+        pyproject-build --wheel
+    - name: Upload wheel
+      uses: actions/upload-artifact@v2
+      with:
+        name: wheel
+        path: dist
