@@ -55,6 +55,7 @@ public:
     }
     ~dclimplode_compressobj(){
         pthread_cancel(thread);
+        pthread_detach(thread);
     }
 
     void put(char *buf, unsigned int len){
@@ -104,6 +105,7 @@ public:
             for(;!requireInput && !finished;)usleep(SLEEP_US);
             if(finished){
                 pthread_join(thread,NULL);
+                thread=NULL;
                 if(result)throw std::runtime_error(format("implode() error (%d)", result));
             }
         }
@@ -122,7 +124,11 @@ public:
             first=false;
             for(;hasInput && !finished;)usleep(SLEEP_US);
             for(;!requireInput && !finished;)usleep(SLEEP_US);
-            if(finished)pthread_join(thread,NULL);
+            if(finished){
+                pthread_join(thread,NULL);
+                thread=NULL;
+                if(result)throw std::runtime_error(format("implode() error (%d)", result));
+            }
         }
         return py::bytes((char*)outstr.data(), outstr.size());
     }
@@ -143,6 +149,7 @@ public:
     }
     ~dclimplode_decompressobj_blast(){
         pthread_cancel(thread);
+        pthread_detach(thread);
     }
 
     int put(unsigned char *buf, unsigned int len){
@@ -186,6 +193,7 @@ public:
             for(;!requireInput && !finished;)usleep(SLEEP_US);
             if(finished){
                 pthread_join(thread,NULL);
+                thread=NULL;
                 if(result)throw std::runtime_error(format("blast() error (%d)", result));
             }
         }
@@ -211,6 +219,7 @@ public:
     }
     ~dclimplode_decompressobj_pklib(){
         pthread_cancel(thread);
+        pthread_detach(thread);
     }
 
     void put(char *buf, unsigned int len){
@@ -260,6 +269,7 @@ public:
             for(;!requireInput && !finished;)usleep(SLEEP_US);
             if(finished){
                 pthread_join(thread,NULL);
+                thread=NULL;
                 if(result)throw std::runtime_error(format("explode() error (%d)", result));
             }
         }
