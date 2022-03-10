@@ -8,7 +8,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [2.7, 3.5, 3.6, 3.7, 3.8, 3.9, pypy-2.7, pypy-3.7]
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', 'pypy-2.7', 'pypy-3.7']
         os: [ubuntu-latest]
 
     steps:
@@ -26,17 +26,9 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install pytest wheel pybind11
         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
-    #- name: Build wheel
-    #  run: |
-    #    python setup.py bdist_wheel -p manylinux1_x86_64
-    #- name: Upload wheel
-    #  uses: actions/upload-artifact@v2
-    #  with:
-    #    name: wheel-${{ matrix.os }}
-    #    path: dist
     - name: Install
       run: |
         python setup.py install
     - name: Test
       run: |
-        pytest
+        pytest -v
