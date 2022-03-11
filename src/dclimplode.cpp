@@ -54,8 +54,10 @@ public:
         outstr.reserve(65536);
     }
     ~dclimplode_compressobj(){
-        pthread_cancel(thread);
-        pthread_detach(thread);
+        if(thread){
+            pthread_cancel(thread);
+            pthread_detach(thread);
+        }
     }
 
     void put(char *buf, unsigned int len){
@@ -148,8 +150,10 @@ public:
         outstr.reserve(65536);
     }
     ~dclimplode_decompressobj_blast(){
-        pthread_cancel(thread);
-        pthread_detach(thread);
+        if(thread){
+            pthread_cancel(thread);
+            pthread_detach(thread);
+        }
     }
 
     int put(unsigned char *buf, unsigned int len){
@@ -218,8 +222,10 @@ public:
         outstr.reserve(65536);
     }
     ~dclimplode_decompressobj_pklib(){
-        pthread_cancel(thread);
-        pthread_detach(thread);
+        if(thread){
+            pthread_cancel(thread);
+            pthread_detach(thread);
+        }
     }
 
     void put(char *buf, unsigned int len){
