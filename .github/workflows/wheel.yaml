@@ -55,6 +55,7 @@ jobs:
         python -m pip install auditwheel
         python -m auditwheel repair --plat linux_x86_64 --wheel-dir dist dist/*.whl
         rm -f dist/*-linux*.whl
+        for file in dist/*linux_x86_64.*whl; do mv ${file} ${file//linux_x86_64./}; done
     - name: Upload wheel
       uses: actions/upload-artifact@v2
       with:
