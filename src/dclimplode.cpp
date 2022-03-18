@@ -1,3 +1,8 @@
+#if defined(_WIN32) || (!defined(__GNUC__) && !defined(__clang__))
+#define _hypot hypot
+#include <cmath>
+#endif
+
 #include <pybind11/pybind11.h>
 
 extern "C" {

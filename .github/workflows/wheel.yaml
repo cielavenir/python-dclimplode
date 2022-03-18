@@ -12,13 +12,17 @@ jobs:
         os: [macos-latest, windows-latest]
         architecture: ["x64", "x86"]
         exclude:
-          - python-version: '2.7' # pybind11 requires VC2015 and thus can build only >=3.5 wheels
-            os: windows-latest
           - os: macos-latest
             architecture: "x86"
         include:
           - python-version: 'pyston'
             os: ubuntu-18.04
+            architecture: "x64"
+          - python-version: '3.4'
+            os: windows-latest
+            architecture: "x86"
+          - python-version: '3.4'
+            os: windows-latest
             architecture: "x64"
 
     steps:
@@ -43,9 +47,29 @@ jobs:
         sudo chown -RH $(whoami) $(python -c 'import os,inspect;print(os.path.dirname(inspect.getfile(inspect)))')
         sudo chown -hRH $(whoami) /usr/bin
         python -m pip install --upgrade pip
-    - name: Install pypa-build
+    - name: "Install Visual C++ for Python 2.7"
+      if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '2.7' }}
+      run: |
+        curl -L -O https://github.com/reider-roque/sulley-win-installer/raw/master/VCForPython27.msi
+        msiexec /i VCForPython27.msi /qn
+    #     choco install vcpython27 -f -y
+    - name: Upgrade pip
+      if: ${{ matrix.python-version != '2.7' && matrix.python-version != '3.4' }}
       run: |
         python -m pip install --upgrade pip
+    - name: Upgrade pip (2.7)
+      if: ${{ matrix.python-version == '2.7' }}
+      run: |
+        python -m pip install --upgrade pip~=20.0
+        python -m pip install --upgrade setuptools~=44.0
+    - name: Upgrade pip (3.4)
+      if: ${{ matrix.python-version == '3.4' }}
+      run: |
+        python -m pip install --upgrade pip~=19.0
+        python -m pip install --upgrade setuptools~=43.0
+        python -m pip install pybind11
+    - name: Install dependencies
+      run: |
         python -m pip install build wheel
     - name: Build sdist
       if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '2.7' }}
