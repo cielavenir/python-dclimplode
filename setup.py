@@ -17,6 +17,7 @@ try:
 except ImportError:
     from setuptools import Extension as Pybind11Extension
 
+extra_compile_args=['-O2']
 class build_ext_hook(build_ext, object):
     def build_extension(self, ext):
         if platform.system() == 'Windows':
@@ -33,18 +34,22 @@ class build_ext_hook(build_ext, object):
                 import pybind11
                 source = ext.sources[0]
                 objname = basename(source)+'.o'
-                subprocess.check_call(['clang++', msiz, '-c', '-o', objname, '-O2',
+                subprocess.check_call([
+                    'clang++', msiz, '-c', '-o', objname,
                     '-DHAVE_UINTPTR_T=1',
                     '-I', sysconfig.get_paths()['include'],
                     '-I', sysconfig.get_paths()['platinclude'],
                     '-I', pybind11.get_include(),
-                    source]+win64flags)
+                    source]+extra_compile_args+win64flags+sum((['-I', dir] for dir in ext.include_dirs), []))
                 ext.extra_objects.append(objname)
                 ext.sources.pop(0)
                 if True:
                     for source in ext.sources:
                         objname = basename(source)+'.o'
-                        subprocess.check_call(['clang', msiz, '-c', '-o', objname, source])
+                        cmd = 'clang' if source.endswith('.c') else 'clang++'
+                        subprocess.check_call([
+                            cmd, msiz, '-c', '-o', objname, source
+                        ]+extra_compile_args+sum((['-I', dir] for dir in ext.include_dirs), []))
                         ext.extra_objects.append(objname)
                     pydpath = 'build/lib.%s-%d.%d/%s.pyd'%(plat, sys.hexversion // 16777216, sys.hexversion // 65536 % 256, ext.name.replace('.', '/'))
                     subprocess.check_call(['mkdir', '-p', dirname(pydpath)])
@@ -57,7 +62,7 @@ class build_ext_hook(build_ext, object):
                     print(libpath)
                     subprocess.check_call([
                         'clang++', msiz, '-shared', '-o', pydpath,
-                    ]+ext.extra_objects+[libpath])
+                    ]+ext.extra_objects+ext.extra_link_args+[libpath])
                     return
         build_ext.build_extension(self, ext)
 
@@ -70,9 +75,11 @@ ext_modules = [
             'src/pklib/explode.c',
             'src/pklib/implode.c',
         ],
+        include_dirs=[],
         extra_objects=[],
-        extra_compile_args=['-O2'],
+        extra_compile_args=list(extra_compile_args),
         extra_link_args=['-s'],
+        #extra_link_args=['-Wl,--no-undefined'],
     ),
 ]
 

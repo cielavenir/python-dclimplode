@@ -47,11 +47,11 @@ jobs:
         sudo chown -RH $(whoami) $(python -c 'import os,inspect;print(os.path.dirname(inspect.getfile(inspect)))')
         sudo chown -hRH $(whoami) /usr/bin
         python -m pip install --upgrade pip
-    - name: "Install Visual C++ for Python 2.7"
-      if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '2.7' }}
-      run: |
-        curl -L -O https://github.com/reider-roque/sulley-win-installer/raw/master/VCForPython27.msi
-        msiexec /i VCForPython27.msi /qn
+    # - name: "Install Visual C++ for Python 2.7"
+    #   if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '2.7' }}
+    #   run: |
+    #     curl -L -O https://github.com/reider-roque/sulley-win-installer/raw/master/VCForPython27.msi
+    #     msiexec /i VCForPython27.msi /qn
     #     choco install vcpython27 -f -y
     - name: Upgrade pip
       if: ${{ matrix.python-version != '2.7' && matrix.python-version != '3.4' }}
