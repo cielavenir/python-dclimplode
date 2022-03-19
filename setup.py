@@ -87,7 +87,7 @@ setup(
     name='dclimplode',
     description='a (light) binding for blast/pklib (dclimplode)',
     long_description=open("README.md").read(),
-    version='0.0.0.7',
+    version='0.0.0.8',
     url='https://github.com/cielavenir/python-dclimplode',
     license='MIT',
     author='cielavenir',
@@ -102,7 +102,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
-        'License :: OSI Approved :: Python Software Foundation License',
+        'License :: OSI Approved :: MIT License',
         'Operating System :: POSIX',
         'Operating System :: Microsoft :: Windows',
         'Operating System :: MacOS :: MacOS X',
