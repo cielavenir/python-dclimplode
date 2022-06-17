@@ -75,14 +75,14 @@ jobs:
       if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '2.7' }}
       run:
         python -m build --sdist
-    - name: Build wheel (non-macOS)
-      if: ${{ matrix.os != 'macos-latest' || matrix.python-version == '2.7' || matrix.python-version == '3.4' || matrix.python-version == '3.5' || matrix.python-version == '3.6' || matrix.python-version == '3.7' }}
+    - name: Build wheel
+      # if: ${{ matrix.os != 'macos-latest' || matrix.python-version == '2.7' || matrix.python-version == '3.4' || matrix.python-version == '3.5' || matrix.python-version == '3.6' || matrix.python-version == '3.7' }}
       run: |
         python -m build --wheel
-    - name: Build wheel (macOS)
+    - name: Build wheel (macOS arm64)
       if: ${{ matrix.os == 'macos-latest' && matrix.python-version != '2.7' && matrix.python-version != '3.4' && matrix.python-version != '3.5' && matrix.python-version != '3.6' && matrix.python-version != '3.7' }}
       run: |
-        ARCHFLAGS="-arch arm64 -arch x86_64" python -m build --wheel
+        ARCHFLAGS="-arch arm64" python -m build --wheel
     - name: Audit wheel
       if: ${{ matrix.python-version == 'pyston' }}
       run: |
