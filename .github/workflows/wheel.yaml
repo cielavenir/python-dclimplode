@@ -76,9 +76,13 @@ jobs:
       run:
         python -m build --sdist
     - name: Build wheel
-      # if: ${{ matrix.os != 'macos-latest' || matrix.python-version == '2.7' || matrix.python-version == '3.4' || matrix.python-version == '3.5' || matrix.python-version == '3.6' || matrix.python-version == '3.7' }}
+      if: ${{ matrix.os != 'macos-latest' }}
       run: |
         python -m build --wheel
+    - name: Build wheel (macOS x86_64)
+      if: ${{ matrix.os == 'macos-latest' }}
+      run: |
+        MACOSX_DEPLOYMENT_TARGET="10.12" _PYTHON_HOST_PLATFORM="macosx-10.12-x86_64" ARCHFLAGS="-arch x86_64" python -m build --wheel
     - name: Build wheel (macOS arm64)
       if: ${{ matrix.os == 'macos-latest' && matrix.python-version != '2.7' && matrix.python-version != '3.4' && matrix.python-version != '3.5' && matrix.python-version != '3.6' && matrix.python-version != '3.7' }}
       run: |
