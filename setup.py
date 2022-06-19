@@ -88,7 +88,7 @@ setup(
     description='a (light) binding for blast/pklib (dclimplode)',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
-    version='0.0.0.8',
+    version='0.0.0.9',
     url='https://github.com/cielavenir/python-dclimplode',
     license='MIT',
     author='cielavenir',
