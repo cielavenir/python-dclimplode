@@ -17,6 +17,10 @@ try:
 except ImportError:
     from setuptools import Extension as Pybind11Extension
 
+versionContext = {}
+with open('dclimplode/version.py') as f:
+    exec(f.read(), versionContext)
+
 extra_compile_args=['-O2']
 class build_ext_hook(build_ext, object):
     def build_extension(self, ext):
@@ -88,7 +92,7 @@ setup(
     description='a (light) binding for blast/pklib (dclimplode)',
     long_description=open("README.md").read(),
     long_description_content_type='text/markdown',
-    version='0.0.0.9',
+    version=versionContext['__version__'],
     url='https://github.com/cielavenir/python-dclimplode',
     license='MIT',
     author='cielavenir',

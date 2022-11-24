@@ -8,6 +8,10 @@ import sys
 from setuptools import setup, Extension
 from setuptools.command.build_ext import build_ext
 
+versionContext = {}
+with open('../dclimplode/version.py') as f:
+    exec(f.read(), versionContext)
+
 # Convert distutils Windows platform specifiers to CMake -A arguments
 PLAT_TO_CMAKE = {
     "win32": "Win32",
@@ -126,8 +130,8 @@ setup(
     name='dclimplode',
     description='a (light) binding for blast/pklib (dclimplode)',
     long_description=open("../README.md").read(),
-    version='0.0.0.8',
-    url='https://github.com/cielavenir/python-codecs7z',
+    version=versionContext['__version__'],
+    url='https://github.com/cielavenir/python-dclimplode',
     license='MIT',
     author='cielavenir',
     author_email='cielartisan@gmail.com',
