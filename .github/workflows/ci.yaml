@@ -8,20 +8,20 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', 'pypy-2.7', 'pypy-3.7', 'pyston']
+        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11', 'pypy-2.7', 'pypy-3.7', 'pyston']
         os: [ubuntu-latest]
         architecture: ["x64"]
         include:
           - python-version: '3.4'
             os: ubuntu-18.04
             architecture: "x64"
-          - python-version: '3.9'
+          - python-version: '3.11'
             os: macos-latest
             architecture: "x64"
-          - python-version: '3.9'
+          - python-version: '3.11'
             os: windows-latest
             architecture: "x64"
-          - python-version: '3.9'
+          - python-version: '3.11'
             os: windows-latest
             architecture: "x86"
           - python-version: '2.7'
@@ -83,7 +83,7 @@ jobs:
         python -m pip install pytest wheel pybind11
     - name: Install
       run: |
-        python setup.py install
+        python -m pip install .
     - name: Test
       run: |
         pytest -v test

@@ -23,7 +23,7 @@ jobs:
     - name: Build wheel (2)
       uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux2014_x86_64
       with:
-        python-versions: "cp310-cp310 pp37-pypy37_pp73 pp38-pypy38_pp73 pp39-pypy39_pp73"
+        python-versions: "cp310-cp310 cp311-cp311 pp37-pypy37_pp73 pp38-pypy38_pp73 pp39-pypy39_pp73"
     - name: Clean build
       run: |
         sudo rm -rf build
@@ -31,7 +31,7 @@ jobs:
     - name: Build wheel (3)
       uses: cielavenir/python-wheels-manylinux-build@v0.4.2-musllinux_1_1_x86_64
       with:
-        python-versions: "cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310"
+        python-versions: "cp36-cp36m cp37-cp37m cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311"
     - name: Remove non-manylinux wheels
       run: |
         sudo rm -f dist/*-linux*.whl
