@@ -26,14 +26,14 @@ jobs:
             architecture: "x64"
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Checkout submodule
       run: |
         git submodule init
         git submodule update
     - name: Set up Python ${{ matrix.python-version }}
       if: ${{ matrix.python-version != 'pyston' }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
         architecture: ${{ matrix.architecture }}
@@ -95,7 +95,7 @@ jobs:
         rm -f dist/*-linux*.whl
         for file in dist/*linux_x86_64.*whl; do mv ${file} ${file//linux_x86_64./}; done
     - name: Upload wheel
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: wheel
         path: dist

@@ -11,7 +11,7 @@ jobs:
         os: [ubuntu-latest]
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
     - name: Checkout submodule
       run: |
         git submodule init
@@ -37,7 +37,7 @@ jobs:
         sudo rm -f dist/*-linux*.whl
         sudo rm -f dist/*manylinux*manylinux*manylinux*manylinux*.whl
     - name: Upload wheel
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: wheel
         path: dist
