@@ -82,7 +82,7 @@ ext_modules = [
         include_dirs=[],
         extra_objects=[],
         extra_compile_args=list(extra_compile_args),
-        extra_link_args=['-s'],
+        extra_link_args=[] if platform.system() == 'Windows' else ['-s'],
         #extra_link_args=['-Wl,--no-undefined'],
     ),
 ]

@@ -30,14 +30,10 @@ Enhances distutils with:
 
 import os
 import shlex
-import subprocess
 import sys
 import distutils.sysconfig
 import distutils.ccompiler
 import distutils.unixccompiler
-from distutils import log
-from distutils.errors import (DistutilsExecError, DistutilsPlatformError,
-                              CompileError, LibError, LinkError)
 
 # threaded parallel map (optional)
 pmap = map
@@ -225,141 +221,5 @@ def compile(self, sources, output_dir=None, macros=None,
 
     return objects
 
-if sys.platform.startswith('win'):
-    try:
-        from distutils import _msvccompiler as msvccompiler
-    except ImportError:
-        from distutils import msvccompiler
-
-    @monkeypatch(msvccompiler.MSVCCompiler, 'compile')
-    def compile(self, sources,
-                output_dir=None, macros=None, include_dirs=None, debug=0,
-                extra_preargs=None, extra_postargs=None, depends=None):
-        '''
-        Enable parallel and incremental build.
-        '''
-        if not self.initialized:
-            self.initialize()
-        compile_info = self._setup_compile(output_dir, macros, include_dirs,
-                                           sources, depends, extra_postargs)
-        macros, objects, extra_postargs, pp_opts, build = compile_info
-
-        compile_opts = extra_preargs or []
-        compile_opts.append ('/c')
-        if debug:
-            compile_opts.extend(self.compile_options_debug)
-        else:
-            compile_opts.extend(self.compile_options)
-
-        env = dict(os.environ)
-        try:
-            env['PATH'] = self._paths
-        except AttributeError:
-            pass
-
-        def _single_compile(obj):
-            try:
-                src, ext = build[obj]
-            except KeyError:
-                return
-
-            add_cpp_opts = False
-
-            if debug:
-                # pass the full pathname to MSVC in debug mode,
-                # this allows the debugger to find the source file
-                # without asking the user to browse for it
-                src = os.path.abspath(src)
-
-            if ext in self._c_extensions:
-                input_opt = "/Tc" + src
-            elif ext in self._cpp_extensions:
-                input_opt = "/Tp" + src
-                add_cpp_opts = True
-            elif ext in self._rc_extensions:
-                # compile .RC to .RES file
-                input_opt = src
-                output_opt = "/fo" + obj
-                try:
-                    self.spawn([self.rc] + pp_opts +
-                               [output_opt] + [input_opt])
-                except DistutilsExecError as msg:
-                    raise CompileError(msg)
-                return
-            elif ext in self._mc_extensions:
-                # Compile .MC to .RC file to .RES file.
-                h_dir = os.path.dirname(src)
-                rc_dir = os.path.dirname(obj)
-                try:
-                    # first compile .MC to .RC and .H file
-                    self.spawn([self.mc] +
-                               ['-h', h_dir, '-r', rc_dir] + [src])
-                    base, _ = os.path.splitext (os.path.basename (src))
-                    rc_file = os.path.join (rc_dir, base + '.rc')
-                    # then compile .RC to .RES file
-                    self.spawn([self.rc] +
-                               ["/fo" + obj] + [rc_file])
-
-                except DistutilsExecError as msg:
-                    raise CompileError(msg)
-                return
-            else:
-                # how to handle this file?
-                raise CompileError("Don't know how to compile %s to %s"
-                                   % (src, obj))
-
-            args = [self.cc] + compile_opts + pp_opts
-            if add_cpp_opts:
-                args.append('/EHsc')
-            args.append(input_opt)
-            args.append("/Fo" + obj)
-            args.extend(extra_postargs)
-
-            try:
-                msvc_spawn_and_write_d_file(obj, src, args, env, self.dry_run)
-            except DistutilsExecError as msg:
-                raise CompileError(msg)
-
-        incremental_parallel_compile(_single_compile, objects, self.force)
-
-        return objects
-
-    def msvc_spawn_and_write_d_file(obj, src, cmd, env, dry_run):
-        '''
-        Run command with /showIncludes and convert output to dependency (.d) file.
-        '''
-        log.info(' '.join(cmd))
-
-        if dry_run:
-            return
-
-        process = subprocess.Popen(cmd + ['/showIncludes'], env=env,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                universal_newlines=True)
-        out = process.communicate()[0]
-
-        deps = set([src])
-
-        for line in out.splitlines():
-            if not line.startswith('Note: including file:'):
-                sys.stderr.write(line + '\n')
-                continue
-
-            dep = line[21:].strip()
-            dep_lower = dep.lower()
-            if not (
-                    # filter out system headers
-                    'microsoft visual studio' in dep_lower or
-                    'windows kits' in dep_lower):
-                deps.add(dep)
-
-        if process.returncode != 0:
-            raise DistutilsExecError("command %r failed with exit status %d"
-                    % (cmd, process.returncode))
-
-        with open(os.path.splitext(obj)[0] + '.d', 'w') as handle:
-            handle.write(': ')
-            for dep in deps:
-                handle.write(' \\\n')
-                handle.write(dep.replace('\\', '\\\\').replace(' ', '\\ '))
+# Use setuptools' standard MSVC compiler on Windows. The former override relied
+# on private compiler attributes, including dry_run removed in setuptools 81.

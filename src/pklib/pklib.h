@@ -92,10 +92,10 @@ typedef struct
     unsigned int (*read_buf)(char *buf, unsigned int *size, void *param); // Pointer to function that reads data from the input stream
     void         (*write_buf)(char *buf, unsigned int *size, void *param);// Pointer to function that writes data to the output stream
 
-    unsigned char out_buff[0x2204];         // 0030: Output circle buffer.
+    unsigned char out_buff[0x2205];         // 0030: Output circle buffer.
                                             //       0x0000 - 0x0FFF: Previous uncompressed data, kept for repetitions
                                             //       0x1000 - 0x1FFF: Currently decompressed data
-                                            //       0x2000 - 0x2203: Reserve space for the longest possible repetition
+                                            //       0x2000 - 0x2204: Reserve space for the longest possible repetition
     unsigned char in_buff[0x800];           // 2234: Buffer for data to be decompressed
     unsigned char DistPosCodes[0x100];      // 2A34: Table of distance position codes
     unsigned char LengthCodes[0x100];       // 2B34: Table of length codes

@@ -393,6 +393,7 @@ static unsigned int Expand(TDcmpStruct * pWork)
     unsigned int next_literal;         // Literal decoded from the compressed data
     unsigned int result;               // Value to be returned
     unsigned int copyBytes;             // Number of bytes to copy to the output buffer
+    unsigned int historyBytes = 0;      // Valid bytes available for repetitions
 
     pWork->outputPos = 0x1000;          // Initialize output buffer position
 
@@ -427,12 +428,21 @@ static unsigned int Expand(TDcmpStruct * pWork)
                 break;
             }
 
+            if(minus_dist > historyBytes)
+            {
+                result = 0x306;
+                break;
+            }
+
             // Target and source pointer
             target = &pWork->out_buff[pWork->outputPos];
             source = target - minus_dist;
 
             // Update buffer output position
             pWork->outputPos += rep_length;
+            historyBytes += rep_length;
+            if(historyBytes > 0x1000)
+                historyBytes = 0x1000;
 
             // Copy the repeating sequence
             while(rep_length-- > 0)
@@ -441,6 +451,8 @@ static unsigned int Expand(TDcmpStruct * pWork)
         else
         {
             pWork->out_buff[pWork->outputPos++] = (unsigned char)next_literal;
+            if(historyBytes < 0x1000)
+                historyBytes++;
         }
 
         // Flush the output buffer, if number of extracted bytes has reached the end
@@ -485,7 +497,7 @@ unsigned int PKEXPORT explode(
     pWork->param      = param;
     pWork->in_pos     = sizeof(pWork->in_buff);
     pWork->in_bytes   = pWork->read_buf((char *)pWork->in_buff, &pWork->in_pos, pWork->param);
-    if(pWork->in_bytes <= 4)
+    if(pWork->in_bytes < 3)
         return CMP_BAD_DATA;
 
     pWork->ctype      = pWork->in_buff[0]; // Get the compression type (CMP_BINARY or CMP_ASCII)

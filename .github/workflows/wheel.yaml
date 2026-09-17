@@ -1,101 +1,163 @@
-name: wheel
-  
+name: Wheels
+
 on:
   push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ["2.7", "3.5", "3.6", "3.7", "3.8", "3.9", "3.10", "3.11"]
-        os: [macos-latest, windows-latest]
-        architecture: ["x64", "x86"]
-        exclude:
-          - os: macos-latest
-            architecture: "x86"
-        include:
-          - python-version: 'pyston'
-            os: ubuntu-18.04
-            architecture: "x64"
-          - python-version: '3.4'
-            os: windows-latest
-            architecture: "x86"
-          - python-version: '3.4'
-            os: windows-latest
-            architecture: "x64"
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: [cp39, cp310, cp311, cp312, cp313, cp314]
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Checkout submodule
-      run: |
-        git submodule init
-        git submodule update
-    - name: Set up Python ${{ matrix.python-version }}
-      if: ${{ matrix.python-version != 'pyston' }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: ${{ matrix.architecture }}
-    - name: Set up Pyston
-      if: ${{ matrix.python-version == 'pyston' }}
-      run: |
-        wget -O pyston.deb https://github.com/pyston/pyston/releases/download/pyston_2.3.2/pyston_2.3.2_18.04.deb
-        sudo apt update
-        sudo apt install -y ./pyston.deb
-        sudo ln -sf pyston /usr/bin/python
-        sudo chown -RH $(whoami) $(python -c 'import os,inspect;print(os.path.dirname(inspect.getfile(inspect)))')
-        sudo chown -hRH $(whoami) /usr/bin
-        python -m pip install --upgrade pip
-    # - name: "Install Visual C++ for Python 2.7"
-    #   if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '2.7' }}
-    #   run: |
-    #     curl -L -O https://github.com/reider-roque/sulley-win-installer/raw/master/VCForPython27.msi
-    #     msiexec /i VCForPython27.msi /qn
-    #     choco install vcpython27 -f -y
-    - name: Upgrade pip
-      if: ${{ matrix.python-version != '2.7' && matrix.python-version != '3.4' }}
-      run: |
-        python -m pip install --upgrade pip
-    - name: Upgrade pip (2.7)
-      if: ${{ matrix.python-version == '2.7' }}
-      run: |
-        python -m pip install --upgrade pip~=20.0
-        python -m pip install --upgrade setuptools~=44.0
-    - name: Upgrade pip (3.4)
-      if: ${{ matrix.python-version == '3.4' }}
-      run: |
-        python -m pip install --upgrade pip~=19.0
-        python -m pip install --upgrade setuptools~=43.0
-        python -m pip install pybind11
-    - name: Install dependencies
-      run: |
-        python -m pip install build wheel
-    - name: Build sdist
-      if: ${{ matrix.os == 'macos-latest' && matrix.python-version == '2.7' }}
-      run:
-        python -m build --sdist
-    - name: Build wheel
-      if: ${{ matrix.os != 'macos-latest' }}
-      run: |
-        python -m build --wheel
-    - name: Build wheel (macOS x86_64)
-      if: ${{ matrix.os == 'macos-latest' }}
-      run: |
-        MACOSX_DEPLOYMENT_TARGET="10.14" _PYTHON_HOST_PLATFORM="macosx-10.14-x86_64" ARCHFLAGS="-arch x86_64" python -m build --wheel
-    - name: Build wheel (macOS arm64)
-      if: ${{ matrix.os == 'macos-latest' && matrix.python-version != '2.7' && matrix.python-version != '3.4' && matrix.python-version != '3.5' && matrix.python-version != '3.6' && matrix.python-version != '3.7' }}
-      run: |
-        MACOSX_DEPLOYMENT_TARGET="11.0" _PYTHON_HOST_PLATFORM="macosx-11.0-arm64" ARCHFLAGS="-arch arm64" python -m build --wheel
-    - name: Audit wheel
-      if: ${{ matrix.python-version == 'pyston' }}
-      run: |
-        python -m pip install auditwheel~=5.1.0
-        python -m auditwheel repair --plat linux_x86_64 --wheel-dir dist dist/*.whl
-        rm -f dist/*-linux*.whl
-        for file in dist/*linux_x86_64.*whl; do mv ${file} ${file//linux_x86_64./}; done
-    - name: Upload wheel
-      uses: actions/upload-artifact@v3
-      with:
-        name: wheel
-        path: dist
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: pypa/cibuildwheel@v4.2.0
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-*
+          CIBW_TEST_REQUIRES: pytest psutil pytest-xdist
+          CIBW_TEST_COMMAND: >-
+            pytest -q {project}/test --deselect test/test_dclimplode.py::test_dclimplode
+            && pytest -n 4 -q {project}/test/test_dclimplode.py::test_dclimplode
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ runner.os }}-${{ matrix.python }}-${{ runner.arch }}
+          path: wheelhouse/*.whl
+
+  legacy:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-15-intel, windows-2022]
+        python: [cp27, cp35, cp36, cp37, cp38]
+        exclude:
+          # cibuildwheel cannot target CPython 3.5 on macOS 11 or newer.
+          - os: macos-15-intel
+            python: cp35
+          # Windows CPython 2.7 requires a custom legacy compiler toolchain.
+          - os: windows-2022
+            python: cp27
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: pypa/cibuildwheel@v1.12.0
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-*
+          CIBW_TEST_COMMAND: python {project}/test/legacy_smoke.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ runner.os }}-${{ matrix.python }}-${{ runner.arch }}
+          path: wheelhouse/*.whl
+
+  pypy:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: pp310
+          - os: ubuntu-latest
+            python: pp311
+          - os: macos-latest
+            python: pp311
+          - os: macos-15-intel
+            python: pp311
+          - os: windows-latest
+            python: pp310
+          - os: windows-latest
+            python: pp311
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: pypa/cibuildwheel@v4.2.0
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-*
+          CIBW_ENABLE: pypy pypy-eol
+          CIBW_TEST_REQUIRES: pytest psutil pytest-xdist
+          CIBW_TEST_COMMAND: >-
+            pytest -q {project}/test --deselect test/test_dclimplode.py::test_dclimplode
+            && pytest -n 4 -q {project}/test/test_dclimplode.py::test_dclimplode
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ runner.os }}-${{ matrix.python }}-${{ runner.arch }}
+          path: wheelhouse/*.whl
+
+  legacy-pypy:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: pp27
+          - os: ubuntu-latest
+            python: pp36
+          - os: ubuntu-latest
+            python: pp37
+          - os: windows-2022
+            python: pp36
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: pypa/cibuildwheel@v1.12.0
+        env:
+          CIBW_BUILD: ${{ matrix.python }}-*
+          CIBW_TEST_COMMAND: python {project}/test/legacy_smoke.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-${{ runner.os }}-${{ matrix.python }}-${{ runner.arch }}
+          path: wheelhouse/*.whl
+
+  pyston:
+    runs-on: ubuntu-latest
+    container: ubuntu:20.04
+
+    steps:
+      - name: Install system build tools
+        run: |
+          apt-get update
+          DEBIAN_FRONTEND=noninteractive apt-get install -y build-essential curl git patchelf
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - name: Install Pyston
+        run: |
+          curl -L -o /tmp/pyston.deb https://github.com/pyston/pyston/releases/download/pyston_2.3.5/pyston_2.3.5_20.04_amd64.deb
+          DEBIAN_FRONTEND=noninteractive apt-get install -y /tmp/pyston.deb
+          ln -sf /usr/bin/pyston /usr/local/bin/python
+          python --version
+      - name: Build wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build wheel
+          python -m build --wheel
+      - name: Repair wheel
+        run: |
+          python -m pip install 'auditwheel~=5.1.0'
+          python -m auditwheel repair --plat linux_x86_64 --wheel-dir wheelhouse dist/*.whl
+      - name: Test installed wheel
+        run: |
+          python -m pip install --no-index --find-links wheelhouse dclimplode
+          python test/legacy_smoke.py
+      - uses: actions/upload-artifact@v7
+        with:
+          name: wheels-Pyston-2.3.5-x64
+          path: wheelhouse/*.whl

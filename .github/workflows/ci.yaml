@@ -1,90 +1,52 @@
 name: CI
-  
+
 on:
   push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ${{ matrix.os }}
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['2.7', '3.5', '3.6', '3.7', '3.8', '3.9', '3.10', '3.11', 'pypy-2.7', 'pypy-3.7', 'pyston']
-        os: [ubuntu-20.04]
-        architecture: ["x64"]
         include:
-          - python-version: '3.4'
-            os: ubuntu-18.04
-            architecture: "x64"
-          - python-version: '3.11'
-            os: macos-latest
-            architecture: "x64"
-          - python-version: '3.11'
-            os: windows-latest
-            architecture: "x64"
-          - python-version: '3.11'
-            os: windows-latest
-            architecture: "x86"
-          - python-version: '2.7'
-            os: windows-latest
-            architecture: "x86"
-          - python-version: '2.7'
-            os: windows-latest
-            architecture: "x64"
-          - python-version: '3.4'
-            os: windows-latest
-            architecture: "x86"
-          - python-version: '3.4'
-            os: windows-latest
-            architecture: "x64"
+          - os: ubuntu-latest
+            python-version: '3.9'
+          - os: ubuntu-latest
+            python-version: '3.10'
+          - os: ubuntu-latest
+            python-version: '3.11'
+          - os: ubuntu-latest
+            python-version: '3.12'
+          - os: ubuntu-latest
+            python-version: '3.13'
+          - os: ubuntu-latest
+            python-version: '3.14'
+          - os: macos-latest
+            python-version: '3.14'
+          - os: windows-latest
+            python-version: '3.14'
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Checkout submodule
-      run: |
-        git submodule init
-        git submodule update
-    - name: Set up Python ${{ matrix.python-version }}
-      if: ${{ matrix.python-version != 'pyston' }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-        architecture: ${{ matrix.architecture }}
-    - name: Set up Pyston
-      if: ${{ matrix.python-version == 'pyston' }}
-      run: |
-        wget -O pyston.deb https://github.com/pyston/pyston/releases/download/pyston_2.3.2/pyston_2.3.2_20.04.deb
-        sudo apt update
-        sudo apt install -y ./pyston.deb
-        sudo ln -sf pyston /usr/bin/python
-        sudo chown -RH $(whoami) $(python -c 'import os,inspect;print(os.path.dirname(inspect.getfile(inspect)))')
-        sudo chown -hRH $(whoami) /usr/bin
-    # - name: "Install Visual C++ for Python 2.7"
-    #   if: ${{ matrix.os == 'windows-latest' && matrix.python-version == '2.7' }}
-    #   run: |
-    #     curl -L -O https://github.com/reider-roque/sulley-win-installer/raw/master/VCForPython27.msi
-    #     msiexec /i VCForPython27.msi /qn
-    #     choco install vcpython27 -f -y
-    - name: Upgrade pip
-      if: ${{ matrix.python-version != '2.7' && matrix.python-version != '3.4' }}
-      run: |
-        python -m pip install --upgrade pip
-    - name: Upgrade pip (2.7)
-      if: ${{ matrix.python-version == '2.7' }}
-      run: |
-        python -m pip install --upgrade pip~=20.0
-        python -m pip install --upgrade setuptools~=44.0
-    - name: Upgrade pip (3.4)
-      if: ${{ matrix.python-version == '3.4' }}
-      run: |
-        python -m pip install --upgrade pip~=19.0
-        python -m pip install --upgrade setuptools~=43.0
-    - name: Install dependencies
-      run: |
-        python -m pip install pytest wheel pybind11
-    - name: Install
-      run: |
-        python -m pip install .
-    - name: Test
-      run: |
-        # has to be script to avoid current directory being sys.path
-        pytest -v test
+      - uses: actions/checkout@v7
+        with:
+          submodules: recursive
+      - uses: astral-sh/setup-uv@v10.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Install built wheel
+        run: |
+          uv venv
+          uv pip install pytest psutil pytest-xdist
+          uv pip install --no-index --find-links dist dclimplode
+      - name: Test installed extension
+        run: uv run --no-project --no-sync pytest -v test --deselect test/test_dclimplode.py::test_dclimplode
+      - name: Test corpus modes in parallel
+        run: uv run --no-project --no-sync pytest -n 4 -v test/test_dclimplode.py::test_dclimplode
