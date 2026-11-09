@@ -22,6 +22,24 @@ with open('dclimplode/version.py') as f:
     exec(f.read(), versionContext)
 
 extra_compile_args=['-O2']
+
+# Build a stable-ABI (abi3) extension on CPython 3.12+ (not free-threaded);
+# older interpreters keep building a version-specific extension.
+import sysconfig
+limited_api = (
+    platform.python_implementation() == 'CPython'
+    and sys.version_info >= (3, 12)
+    and not sysconfig.get_config_var('Py_GIL_DISABLED')
+)
+limited_api_kwargs = {}
+limited_api_options = {}
+if limited_api:
+    limited_api_kwargs = dict(
+        py_limited_api=True,
+        define_macros=[('Py_LIMITED_API', '0x030C0000')],
+    )
+    limited_api_options = {'bdist_wheel': {'py_limited_api': 'cp312'}}
+
 class build_ext_hook(build_ext, object):
     def build_extension(self, ext):
         if platform.system() == 'Windows':
@@ -84,6 +102,7 @@ ext_modules = [
         extra_compile_args=list(extra_compile_args),
         extra_link_args=['-s'],
         #extra_link_args=['-Wl,--no-undefined'],
+        **limited_api_kwargs
     ),
 ]
 
@@ -101,6 +120,7 @@ setup(
     packages=['dclimplode'],
     ext_modules=ext_modules,
     cmdclass={"build_ext": build_ext_hook},
+    options=limited_api_options,
     zip_safe=False,
     include_package_data=True,
     # platforms='any',
